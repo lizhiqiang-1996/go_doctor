@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-doctor/go-doctor/pkg/scorer"
-	"github.com/go-doctor/go-doctor/pkg/types"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/scorer"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/types"
 )
 
 const (
@@ -73,7 +73,7 @@ func (r *Reporter) printScoreHeader(score *types.ScoreResult) {
 	fmt.Printf("  ┌─────┐\n")
 	fmt.Printf("  │ %s │   %s %s %s\n", colorize(face[0], score.Score), colorize(fmt.Sprintf("%d", score.Score), score.Score), dim("/ 100"), colorize(score.Label, score.Score))
 	fmt.Printf("  │ %s │   %s\n", colorize(face[1], score.Score), r.buildScoreBar(score.Score))
-	fmt.Printf("  └─────┘   %s\n", dim("Go Doctor (github.com/go-doctor/go-doctor)"))
+	fmt.Printf("  └─────┘   %s\n", dim("Go Doctor (github.com/lizhiqiang-1996/go_doctor)"))
 	fmt.Println()
 }
 

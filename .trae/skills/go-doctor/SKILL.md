@@ -90,13 +90,20 @@ These dimensions are always included in every scan:
 3. Re-run `go-doctor . --score` to verify score >= 75
 4. If score < 50, do NOT commit — fix critical issues first
 
-## Binary Location
+## Installation
 
 ```bash
-/Users/bytedance/github/go_doctor/go-doctor
+go install github.com/lizhiqiang-1996/go_doctor/cmd/go-doctor@latest
 ```
 
-Or install globally:
+Or clone and build:
+
 ```bash
-go install github.com/go-doctor/go-doctor/cmd/go-doctor@latest
+git clone git@github.com:lizhiqiang-1996/go_doctor.git
+cd go_doctor
+go build -o go-doctor ./cmd/go-doctor/
 ```
+
+## Repository
+
+https://github.com/lizhiqiang-1996/go_doctor

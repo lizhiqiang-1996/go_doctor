@@ -3,7 +3,7 @@ package scorer
 import (
 	"testing"
 
-	"github.com/go-doctor/go-doctor/pkg/types"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/types"
 )
 
 func TestPerfectScore(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-doctor/go-doctor/pkg/analyzer/rules"
-	"github.com/go-doctor/go-doctor/pkg/types"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/analyzer/rules"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/types"
 )
 
 type Analyzer struct {

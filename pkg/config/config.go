@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/go-doctor/go-doctor/pkg/types"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/types"
 )
 
 const ConfigFileName = "go-doctor.config.json"

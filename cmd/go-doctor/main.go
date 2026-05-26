@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-doctor/go-doctor/pkg/reporter"
-	"github.com/go-doctor/go-doctor/pkg/scanner"
-	"github.com/go-doctor/go-doctor/pkg/scorer"
-	"github.com/go-doctor/go-doctor/pkg/types"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/reporter"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/scanner"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/scorer"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/types"
 )
 
 const version = "0.2.0"

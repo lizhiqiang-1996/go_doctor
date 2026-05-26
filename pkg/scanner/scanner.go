@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-doctor/go-doctor/pkg/analyzer"
-	"github.com/go-doctor/go-doctor/pkg/config"
-	"github.com/go-doctor/go-doctor/pkg/git"
-	"github.com/go-doctor/go-doctor/pkg/project"
-	"github.com/go-doctor/go-doctor/pkg/scorer"
-	"github.com/go-doctor/go-doctor/pkg/types"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/analyzer"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/config"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/git"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/project"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/scorer"
+	"github.com/lizhiqiang-1996/go_doctor/pkg/types"
 )
 
 type Scanner struct {
