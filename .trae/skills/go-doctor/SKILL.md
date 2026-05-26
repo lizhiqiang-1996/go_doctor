@@ -1,11 +1,11 @@
 ---
 name: "go-doctor"
-description: "Evaluates AI-generated Go code quality across 5 dimensions. Invoke after writing/reviewing Go code, generating Go code with AI, or when user asks for code quality check or score."
+description: "Evaluates AI-generated Go code quality. Invoke after writing/reviewing Go code, generating Go code with AI, checking MR quality, or when user asks for code quality check."
 ---
 
 # Go Doctor - AI Code Quality Checker
 
-Go Doctor evaluates the quality of AI-generated Go code across 5 dimensions: completeness, idiomatic naming, cleanliness, implementation depth, and type safety. It also detects bugs, security issues, and performance problems.
+Go Doctor evaluates the quality of AI-generated Go code across 5 dimensions (completeness, idiomatic, cleanliness, implementation, type-safety) and detects bugs, security issues, and performance problems.
 
 ## When to Invoke
 
@@ -13,11 +13,17 @@ Go Doctor evaluates the quality of AI-generated Go code across 5 dimensions: com
 - Before committing Go code changes
 - When reviewing a Go project's quality
 - When user asks for code quality check, score, or review
-- When user asks "check my code", "is this code good", "review this Go code"
+- When user asks "check my code", "is this code good", "review this Go code", "check MR quality"
 
 ## Commands
 
-### Quality Scan (most common)
+### Diff Mode (most common — MR/PR quality check)
+```bash
+go-doctor <directory> --diff master --verbose
+```
+Scans only changed lines vs master branch. Use for every MR/PR review. This is the primary use case.
+
+### Quality Scan
 ```bash
 go-doctor <directory> --verbose
 ```
@@ -35,17 +41,11 @@ go-doctor <directory> --json
 ```
 Structured JSON output for programmatic use.
 
-### Diff Mode (MR/PR Review)
-```bash
-go-doctor <directory> --diff main --verbose
-```
-Scans only files changed vs the main branch. Use for MR/PR code review.
-
 ### Commit Mode
 ```bash
 go-doctor <directory> --commit <hash> --verbose
 ```
-Scans only files changed in a specific commit.
+Scans only changed lines in a specific commit.
 
 ## Score Interpretation
 
@@ -80,15 +80,20 @@ These dimensions are always included in every scan:
 | Length/Complexity | 4 | Function depth, function length, file length, line length |
 | Dead Code | 3 | Variable shadow, unused global var, unused struct field |
 
-## Workflow After Generating Go Code
+## Workflow
 
+### After generating Go code
 1. Run `go-doctor . --verbose` to evaluate code quality
 2. Fix all reported issues, prioritizing:
    - **P0**: Security (SQL/command injection), unchecked errors
    - **P1**: AI quality dimensions (completeness, idiomatic, cleanliness, implementation, type safety)
    - **P2**: Code style, performance, dead code
 3. Re-run `go-doctor . --score` to verify score >= 75
-4. If score < 50, do NOT commit — fix critical issues first
+
+### Before merging MR/PR
+1. Run `go-doctor . --diff master --verbose` to check only changed lines
+2. Fix all P0 and P1 issues
+3. Ensure score >= 50 before merging
 
 ## Installation
 
