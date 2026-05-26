@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/lizhiqiang-1996/go_doctor/pkg/types"
 )
 
 type DiffResult struct {
@@ -33,7 +37,7 @@ func GetDiffFiles(rootDir string, baseBranch string) (*DiffResult, error) {
 		baseBranch = "main"
 	}
 
-	mergedBase, err := getMergeBase(rootDir, baseBranch)
+	mergedBase, err := GetMergeBase(rootDir, baseBranch)
 	if err != nil {
 		mergedBase = baseBranch
 	}
@@ -97,7 +101,7 @@ func getCurrentBranch(rootDir string) (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func getMergeBase(rootDir string, branch string) (string, error) {
+func GetMergeBase(rootDir string, branch string) (string, error) {
 	cmd := exec.Command("git", "merge-base", branch, "HEAD")
 	cmd.Dir = rootDir
 	output, err := cmd.Output()
@@ -221,4 +225,73 @@ func filterGoFiles(files []string) []string {
 		}
 	}
 	return goFiles
+}
+
+var hunkHeaderRe = regexp.MustCompile(`^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@`)
+
+func GetChangedLines(rootDir string, baseRef string) map[string][]types.LineRange {
+	cmd := exec.Command("git", "diff", "-U0", baseRef)
+	cmd.Dir = rootDir
+	output, err := cmd.Output()
+	if err != nil {
+		return nil
+	}
+
+	return parseChangedLines(string(output), rootDir)
+}
+
+func GetCommitChangedLines(rootDir string, commitHash string) map[string][]types.LineRange {
+	cmd := exec.Command("git", "diff", "-U0", commitHash+"^", commitHash)
+	cmd.Dir = rootDir
+	output, err := cmd.Output()
+	if err != nil {
+		cmd2 := exec.Command("git", "show", "-U0", "--format=", commitHash)
+		cmd2.Dir = rootDir
+		output2, err2 := cmd2.Output()
+		if err2 != nil {
+			return nil
+		}
+		return parseChangedLines(string(output2), rootDir)
+	}
+	return parseChangedLines(string(output), rootDir)
+}
+
+func parseChangedLines(diffOutput string, rootDir string) map[string][]types.LineRange {
+	result := make(map[string][]types.LineRange)
+	var currentFile string
+
+	lines := strings.Split(diffOutput, "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "+++ b/") {
+			relPath := strings.TrimPrefix(line, "+++ b/")
+			currentFile = filepath.Join(rootDir, relPath)
+			continue
+		}
+
+		if currentFile == "" {
+			continue
+		}
+
+		matches := hunkHeaderRe.FindStringSubmatch(line)
+		if matches == nil {
+			continue
+		}
+
+		start, _ := strconv.Atoi(matches[1])
+		count := 1
+		if matches[2] != "" {
+			count, _ = strconv.Atoi(matches[2])
+		}
+
+		if count == 0 {
+			continue
+		}
+
+		result[currentFile] = append(result[currentFile], types.LineRange{
+			Start: start,
+			End:   start + count - 1,
+		})
+	}
+
+	return result
 }

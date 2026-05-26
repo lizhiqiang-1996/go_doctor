@@ -111,12 +111,17 @@ func (s *Scanner) scanDiff(start time.Time, a *analyzer.Analyzer, projectInfo ty
 		}
 	}
 
+	mergedBase, _ := git.GetMergeBase(s.rootDir, s.options.DiffBase)
+	changedLines := git.GetChangedLines(s.rootDir, mergedBase)
+
 	var allDiagnostics []types.Diagnostic
 
 	if s.options.Lint && len(diffResult.ChangedFiles) > 0 {
 		lintDiagnostics := a.AnalyzeFiles(s.rootDir, diffResult.ChangedFiles)
 		allDiagnostics = append(allDiagnostics, lintDiagnostics...)
 	}
+
+	allDiagnostics = filterDiagnosticsByChangedLines(allDiagnostics, changedLines)
 
 	diffFileCount := len(diffResult.ChangedFiles)
 	var score *types.ScoreResult
@@ -140,6 +145,7 @@ func (s *Scanner) scanDiff(start time.Time, a *analyzer.Analyzer, projectInfo ty
 			AddedFiles:    diffResult.AddedFiles,
 			ModifiedFiles: diffResult.ModifiedFiles,
 			DeletedFiles:  diffResult.DeletedFiles,
+			ChangedLines:  changedLines,
 		},
 	}
 }
@@ -158,12 +164,16 @@ func (s *Scanner) scanCommit(start time.Time, a *analyzer.Analyzer, projectInfo 
 		}
 	}
 
+	changedLines := git.GetCommitChangedLines(s.rootDir, s.options.Commit)
+
 	var allDiagnostics []types.Diagnostic
 
 	if s.options.Lint && len(commitResult.ChangedFiles) > 0 {
 		lintDiagnostics := a.AnalyzeFiles(s.rootDir, commitResult.ChangedFiles)
 		allDiagnostics = append(allDiagnostics, lintDiagnostics...)
 	}
+
+	allDiagnostics = filterDiagnosticsByChangedLines(allDiagnostics, changedLines)
 
 	commitFileCount := len(commitResult.ChangedFiles)
 	var score *types.ScoreResult
@@ -190,6 +200,7 @@ func (s *Scanner) scanCommit(start time.Time, a *analyzer.Analyzer, projectInfo 
 			Author:       commitResult.Author,
 			Message:      commitMsg,
 			ChangedFiles: commitResult.ChangedFiles,
+			ChangedLines: changedLines,
 		},
 	}
 }
@@ -214,4 +225,31 @@ func formatFileList(files []string, rootDir string) string {
 		result += fmt.Sprintf("  %s\n", relPath)
 	}
 	return result
+}
+
+func filterDiagnosticsByChangedLines(diagnostics []types.Diagnostic, changedLines map[string][]types.LineRange) []types.Diagnostic {
+	if len(changedLines) == 0 {
+		return diagnostics
+	}
+
+	var filtered []types.Diagnostic
+	for _, d := range diagnostics {
+		ranges, ok := changedLines[d.FilePath]
+		if !ok {
+			continue
+		}
+
+		inRange := false
+		for _, r := range ranges {
+			if d.Line >= r.Start && d.Line <= r.End {
+				inRange = true
+				break
+			}
+		}
+
+		if inRange {
+			filtered = append(filtered, d)
+		}
+	}
+	return filtered
 }

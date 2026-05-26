@@ -75,19 +75,26 @@ type ScanResult struct {
 }
 
 type DiffInfo struct {
-	BaseBranch    string   `json:"baseBranch"`
-	CurrentBranch string   `json:"currentBranch"`
-	ChangedFiles  []string `json:"changedFiles"`
-	AddedFiles    []string `json:"addedFiles"`
-	ModifiedFiles []string `json:"modifiedFiles"`
-	DeletedFiles  []string `json:"deletedFiles"`
+	BaseBranch    string                 `json:"baseBranch"`
+	CurrentBranch string                 `json:"currentBranch"`
+	ChangedFiles  []string               `json:"changedFiles"`
+	AddedFiles    []string               `json:"addedFiles"`
+	ModifiedFiles []string               `json:"modifiedFiles"`
+	DeletedFiles  []string               `json:"deletedFiles"`
+	ChangedLines  map[string][]LineRange `json:"changedLines,omitempty"`
+}
+
+type LineRange struct {
+	Start int `json:"start"`
+	End   int `json:"end"`
 }
 
 type CommitInfo struct {
-	CommitHash   string   `json:"commitHash"`
-	Author       string   `json:"author"`
-	Message      string   `json:"message"`
-	ChangedFiles []string `json:"changedFiles"`
+	CommitHash   string                 `json:"commitHash"`
+	Author       string                 `json:"author"`
+	Message      string                 `json:"message"`
+	ChangedFiles []string               `json:"changedFiles"`
+	ChangedLines map[string][]LineRange `json:"changedLines,omitempty"`
 }
 
 type ScanOptions struct {
