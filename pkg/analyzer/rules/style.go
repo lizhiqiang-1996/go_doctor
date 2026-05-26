@@ -3,8 +3,6 @@ package rules
 import (
 	"go/ast"
 	"go/token"
-	"strings"
-	"unicode"
 
 	"github.com/lizhiqiang-1996/go_doctor/pkg/types"
 )
@@ -74,56 +72,6 @@ func (r *ExportedWithoutCommentRule) Check(file *ast.File, fset *token.FileSet, 
 				}
 			}
 		}
-	}
-
-	return diagnostics
-}
-
-type PackageNamingRule struct{}
-
-func (r *PackageNamingRule) ID() string { return "style/package-naming" }
-func (r *PackageNamingRule) Description() string {
-	return "Detects package names that don't follow Go conventions (lowercase, no underscores)"
-}
-
-func (r *PackageNamingRule) Check(file *ast.File, fset *token.FileSet, filePath string, rootDir string) []types.Diagnostic {
-	var diagnostics []types.Diagnostic
-
-	name := file.Name.Name
-	if name == "" {
-		return diagnostics
-	}
-
-	hasUpper := false
-	hasUnderscore := false
-	hasHyphen := false
-
-	for _, ch := range name {
-		if unicode.IsUpper(ch) {
-			hasUpper = true
-		}
-		if ch == '_' {
-			hasUnderscore = true
-		}
-		if ch == '-' {
-			hasHyphen = true
-		}
-	}
-
-	if hasUpper || hasUnderscore || hasHyphen {
-		pos := fset.Position(file.Pos())
-		suggested := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(name, "_", ""), "-", ""))
-		diagnostics = append(diagnostics, types.Diagnostic{
-			FilePath: filePath,
-			Plugin:   "go-doctor",
-			Rule:     r.ID(),
-			Severity: types.SeverityWarning,
-			Message:  "Package name '" + name + "' doesn't follow Go naming conventions",
-			Help:     "Use lowercase without underscores or hyphens, e.g., '" + suggested + "'",
-			Line:     pos.Line,
-			Column:   pos.Column,
-			Category: types.CategoryCodeStyle,
-		})
 	}
 
 	return diagnostics

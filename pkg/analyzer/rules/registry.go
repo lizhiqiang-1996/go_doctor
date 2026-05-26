@@ -38,7 +38,6 @@ func AllRules() []Rule {
 		&WeakCryptoRule{},
 		&HardcodedCredentialsRule{},
 		&ExportedWithoutCommentRule{},
-		&PackageNamingRule{},
 		&FunctionComplexityRule{},
 		&EmptyInterfaceRule{},
 		&UnusedLabelRule{},

@@ -62,11 +62,12 @@ func (r *SnakeCaseNamingRule) Check(file *ast.File, fset *token.FileSet, filePat
 	var diagnostics []types.Diagnostic
 
 	seen := make(map[string]bool)
+	importAliases := collectImportAliases(file)
+	selectorPrefixes := collectSelectorPrefixes(file)
+	localDecls := collectLocalDeclarations(file)
 
 	ast.Inspect(file, func(n ast.Node) bool {
 		switch node := n.(type) {
-		case *ast.File:
-			return true
 		case *ast.ImportSpec:
 			return false
 		case *ast.Ident:
@@ -76,6 +77,14 @@ func (r *SnakeCaseNamingRule) Check(file *ast.File, fset *token.FileSet, filePat
 			}
 
 			if name == file.Name.Name {
+				return true
+			}
+
+			if importAliases[name] {
+				return true
+			}
+
+			if selectorPrefixes[name] && !localDecls[name] {
 				return true
 			}
 
@@ -122,6 +131,97 @@ func isSnakeCase(name string) bool {
 
 func isLower(ch byte) bool {
 	return ch >= 'a' && ch <= 'z'
+}
+
+func collectImportAliases(file *ast.File) map[string]bool {
+	aliases := make(map[string]bool)
+	for _, imp := range file.Imports {
+		if imp.Name != nil {
+			if imp.Name.Name != "_" && imp.Name.Name != "." {
+				aliases[imp.Name.Name] = true
+			}
+		} else {
+			path := strings.Trim(imp.Path.Value, `"`)
+			idx := strings.LastIndex(path, "/")
+			if idx >= 0 {
+				pkgName := path[idx+1:]
+				aliases[pkgName] = true
+			}
+		}
+	}
+	return aliases
+}
+
+func collectSelectorPrefixes(file *ast.File) map[string]bool {
+	prefixes := make(map[string]bool)
+	ast.Inspect(file, func(n ast.Node) bool {
+		sel, ok := n.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+		if ident, ok := sel.X.(*ast.Ident); ok {
+			prefixes[ident.Name] = true
+		}
+		return true
+	})
+	return prefixes
+}
+
+func collectLocalDeclarations(file *ast.File) map[string]bool {
+	decls := make(map[string]bool)
+	ast.Inspect(file, func(n ast.Node) bool {
+		switch node := n.(type) {
+		case *ast.ValueSpec:
+			for _, name := range node.Names {
+				if name.Name != "_" {
+					decls[name.Name] = true
+				}
+			}
+		case *ast.AssignStmt:
+			if node.Tok == token.DEFINE {
+				for _, expr := range node.Lhs {
+					if ident, ok := expr.(*ast.Ident); ok && ident.Name != "_" {
+						decls[ident.Name] = true
+					}
+				}
+			}
+		case *ast.RangeStmt:
+			if ident, ok := node.Key.(*ast.Ident); ok && ident.Name != "_" {
+				decls[ident.Name] = true
+			}
+			if ident, ok := node.Value.(*ast.Ident); ok && ident.Name != "_" {
+				decls[ident.Name] = true
+			}
+		}
+		return true
+	})
+
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Type == nil {
+			continue
+		}
+		if fn.Type.Params != nil {
+			for _, field := range fn.Type.Params.List {
+				for _, name := range field.Names {
+					if name.Name != "_" {
+						decls[name.Name] = true
+					}
+				}
+			}
+		}
+		if fn.Type.Results != nil {
+			for _, field := range fn.Type.Results.List {
+				for _, name := range field.Names {
+					if name.Name != "_" {
+						decls[name.Name] = true
+					}
+				}
+			}
+		}
+	}
+
+	return decls
 }
 
 func toCamelCase(snake string) string {
