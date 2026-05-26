@@ -1,0 +1,48 @@
+name: Go Doctor - Code Quality Check
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Install go-doctor
+        run: go install github.com/go-doctor/go-doctor/cmd/go-doctor@latest
+
+      - name: Full Code Quality Scan
+        run: |
+          echo "## 🏥 Code Quality Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          go-doctor . --json > /tmp/go-doctor-report.json 2>/dev/null || true
+          go-doctor . --verbose 2>&1 | tee /tmp/go-doctor-output.txt
+          SCORE=$(go-doctor . --score 2>/dev/null | grep -oE '[0-9]+' | head -1 || echo "0")
+          echo "**Score: ${SCORE}/100**" >> $GITHUB_STEP_SUMMARY
+
+      - name: AI Code Quality Check
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🤖 AI Code Quality" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          go-doctor . --ai --verbose 2>&1 | tee -a $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Check Score Threshold
+        run: |
+          SCORE=$(go-doctor . --score 2>/dev/null | grep -oE '[0-9]+' | head -1 || echo "0")
+          if [ "$SCORE" -lt 50 ]; then
+            echo "❌ Code quality score $SCORE is below threshold 50"
+            exit 1
+          fi
+          echo "✅ Code quality score: $SCORE"

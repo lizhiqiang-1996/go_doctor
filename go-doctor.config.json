@@ -1,0 +1,6 @@
+{
+  "ignore": {
+    "rules": ["style/exported-without-comment", "deadcode/unused-export"],
+    "files": []
+  }
+}

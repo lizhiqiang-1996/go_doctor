@@ -1,0 +1,6 @@
+/go-doctor
+/go-doctor-mcp
+*.exe
+*.test
+*.out
+vendor/

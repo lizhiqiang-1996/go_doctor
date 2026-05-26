@@ -1,0 +1,35 @@
+#!/bin/bash
+set -e
+
+STAGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACM -- '*.go' | grep -v '_test\.go$' || true)
+
+if [ -z "$STAGED_GO_FILES" ]; then
+    exit 0
+fi
+
+echo "🔍 Running go-doctor AI code quality check on staged files..."
+
+GO_DOCTOR=$(which go-doctor 2>/dev/null || echo "")
+
+if [ -z "$GO_DOCTOR" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -f "$SCRIPT_DIR/../go-doctor" ]; then
+        GO_DOCTOR="$SCRIPT_DIR/../go-doctor"
+    else
+        echo "⚠️  go-doctor not found, skipping check"
+        exit 0
+    fi
+fi
+
+SCORE=$($GO_DOCTOR . --score 2>/dev/null | grep -oE '[0-9]+' | head -1 || echo "0")
+
+if [ "$SCORE" -lt 50 ]; then
+    echo ""
+    echo "❌ Code Quality Score: $SCORE/100 (threshold: 50)"
+    echo "   Run 'go-doctor . --verbose' to see issues"
+    echo "   Use 'git commit --no-verify' to bypass this check"
+    exit 1
+fi
+
+echo "✅ Code Quality Score: $SCORE/100"
+exit 0
