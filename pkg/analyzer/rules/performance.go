@@ -225,9 +225,13 @@ func (r *LargeStructCopyRule) getTypeName(expr ast.Expr) string {
 }
 
 func (r *LargeStructCopyRule) isLikelyLargeStruct(name string) bool {
+	if name == "Context" {
+		return false
+	}
+
 	largeStructPatterns := []string{
 		"Config", "Request", "Response", "Options", "Settings",
-		"Context", "Message", "Payload", "Data", "Info",
+		"Message", "Payload", "Data", "Info",
 		"Record", "Document", "Entity", "Model",
 	}
 

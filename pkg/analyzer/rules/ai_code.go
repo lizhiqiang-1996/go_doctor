@@ -65,13 +65,21 @@ func (r *SnakeCaseNamingRule) Check(file *ast.File, fset *token.FileSet, filePat
 
 	ast.Inspect(file, func(n ast.Node) bool {
 		switch node := n.(type) {
+		case *ast.File:
+			return true
+		case *ast.ImportSpec:
+			return false
 		case *ast.Ident:
 			name := node.Name
 			if name == "_" || name == "nil" || seen[name] {
 				return true
 			}
 
-			if isSnakeCase(name) && !isPackageName(name, file) {
+			if name == file.Name.Name {
+				return true
+			}
+
+			if isSnakeCase(name) {
 				seen[name] = true
 				pos := fset.Position(node.Pos())
 				goName := toCamelCase(name)
@@ -110,10 +118,6 @@ func isSnakeCase(name string) bool {
 		}
 	}
 	return hasUnderscore
-}
-
-func isPackageName(name string, file *ast.File) bool {
-	return name == file.Name.Name
 }
 
 func isLower(ch byte) bool {
