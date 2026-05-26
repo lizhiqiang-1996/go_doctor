@@ -1,123 +1,125 @@
 # 🏥 Go Doctor
 
-AI 生成 Go 代码质量评估工具。从完整性、惯用性、整洁性、实现度、类型安全 5 个维度评估 AI 生成代码的质量，同时提供 33 条规则覆盖错误处理、安全、并发等常规代码质量问题。
+AI-generated Go code quality evaluator. Assesses AI-generated code across 5 dimensions — Completeness, Idiomatic, Cleanliness, Implementation, Type Safety — plus 33 rules covering error handling, security, concurrency, and more.
 
-灵感来源于 [react-doctor](https://github.com/millionco/react-doctor) 和 [goreporter](https://github.com/qax-os/goreporter)。
+Inspired by [react-doctor](https://github.com/millionco/react-doctor) and [goreporter](https://github.com/qax-os/goreporter).
 
-## 特性
+## Features
 
-- **5 维 AI 质量评估** — Completeness / Idiomatic / Cleanliness / Implementation / Type Safety
-- **33 条检测规则** — 覆盖错误处理、安全、并发、性能、代码风格、正确性、死代码
-- **0-100 评分系统** — 分类加权 + 密度归一化 + 对数衰减，大型项目评分合理
-- **MR/PR 代码审查** — `--diff` 模式只扫描变更行
-- **Commit 代码审查** — `--commit` 模式扫描指定提交的变更行
-- **JSON 输出** — 结构化报告，便于集成 CI/CD
+- **5 AI Quality Dimensions** — Completeness / Idiomatic / Cleanliness / Implementation / Type Safety
+- **33 Detection Rules** — Error handling, security, concurrency, performance, style, correctness, dead code
+- **0-100 Scoring** — Category weighting + density normalization + logarithmic decay
+- **MR/PR Review** — `--diff` mode scans only changed lines
+- **Commit Review** — `--commit` mode scans only lines changed in a commit
+- **JSON Output** — Structured reports for CI/CD integration
 
-## 安装
+## Install
 
 ```bash
 go install github.com/lizhiqiang-1996/go_doctor/cmd/go-doctor@latest
 ```
 
-## 快速开始
+## Quick Start
 
 ```bash
-# 扫描并评估代码质量
+# Evaluate code quality
 go-doctor . --verbose
 
-# 只看评分
+# Quick score
 go-doctor . --score
 
-# JSON 格式输出
+# JSON report
 go-doctor . --json
 
-# MR 代码审查
-go-doctor . --diff main --verbose
+# MR/PR review (most common)
+go-doctor . --diff master --verbose
 ```
 
-## AI 质量评估
+## AI Quality Evaluation
 
-Go Doctor 的核心功能是评估 AI 生成代码的质量，从 5 个维度进行检测：
+Go Doctor evaluates AI-generated code quality across 5 dimensions:
 
-| 维度 | 规则 | 检测内容 | 示例 |
-|------|------|---------|------|
-| **Completeness** 完整性 | `completeness/placeholder-comment` | TODO/FIXME/HACK 占位符 — 实现不完整 | `// TODO: implement this` |
-| **Idiomatic** 惯用性 | `idiomatic/snake-case-naming` | snake_case 命名 — 不符合 Go 惯例 | `user_id` → `userID` |
-| **Cleanliness** 整洁性 | `cleanliness/debug-print` | fmt.Println 调试代码 — 遗留调试语句 | `fmt.Println("debug")` → `log.Printf` |
-| **Implementation** 实现度 | `implementation/empty-func-body` | 空函数体/存根 — 未真正实现 | `func Foo() { return nil }` |
-| **Type Safety** 类型安全 | `type-safety/overly-broad-interface` | interface{}/any — 类型安全不足 | `func Process(data any) any` |
+| Dimension | Rule | What It Checks | Example |
+|-----------|------|---------------|---------|
+| **Completeness** | `completeness/placeholder-comment` | TODO/FIXME/HACK placeholders — incomplete implementation | `// TODO: implement this` |
+| **Idiomatic** | `idiomatic/snake-case-naming` | snake_case naming — not idiomatic Go | `user_id` → `userID` |
+| **Cleanliness** | `cleanliness/debug-print` | fmt.Println debug statements — leftover debug code | `fmt.Println("debug")` → `log.Printf` |
+| **Implementation** | `implementation/empty-func-body` | Empty bodies / stubs — not truly implemented | `func Foo() { return nil }` |
+| **Type Safety** | `type-safety/overly-broad-interface` | interface{}/any — insufficient type safety | `func Process(data any) any` |
 
-5 条 AI 质量规则默认包含在每次扫描中，无需额外参数。
+These 5 rules are included in every scan by default.
 
-## 使用方式
+## Usage
 
-### 全量扫描
+### Full Scan
 
 ```bash
 go-doctor /path/to/project --verbose
 ```
 
-扫描所有 Go 文件，输出完整的代码质量报告（包含 5 维 AI 质量评估）。
+Scans all Go files and reports all quality issues (including 5 AI quality dimensions).
 
-### MR/PR 代码审查
+### MR/PR Review
 
 ```bash
-# 对比 main 分支
+# Compare with main branch
 go-doctor . --diff main --verbose
 
-# 对比远程分支
+# Compare with remote branch
 go-doctor . --diff origin/main --verbose
 ```
 
-只扫描与目标分支有差异的变更行，适合 MR/PR 审查。
+Scans only changed lines vs the target branch. Ideal for MR/PR review.
 
-### Commit 代码审查
+### Commit Review
 
 ```bash
-# 扫描最新提交
+# Latest commit
 go-doctor . --commit HEAD --verbose
 
-# 扫描指定提交
+# Specific commit
 go-doctor . --commit abc1234 --verbose
 ```
 
-## 命令行参数
+Scans only lines changed in the specified commit.
+
+## CLI Options
 
 ```
 go-doctor [directory] [options]
 
 Options:
-  --verbose         显示每个规则的详细问题
-  --score           只输出评分
-  --json            输出 JSON 格式报告
-  --no-lint         跳过 lint 检查
-  --no-dead-code    跳过死代码检测
-  --diff [branch]   只扫描与目标分支有差异的文件（默认: main）
-  --commit <hash>   只扫描指定提交变更的文件
-  -v, --version     显示版本号
-  -h, --help        显示帮助信息
+  --verbose         Show detailed issues for each rule
+  --score           Output only the score
+  --json            Output JSON format report
+  --no-lint         Skip lint checks
+  --no-dead-code    Skip dead code detection
+  --diff [branch]   Scan only changed lines vs target branch (default: main)
+  --commit <hash>   Scan only lines changed in the specified commit
+  -v, --version     Show version
+  -h, --help        Show help
 ```
 
-## 评分系统
+## Scoring
 
-### 评分等级
+### Score Levels
 
-| 评分 | 等级 | 含义 |
-|------|------|------|
-| 75-100 | Good | 代码质量可接受 |
-| 50-74 | Needs Work | 存在需要修复的问题 |
-| 0-49 | Critical | 存在严重问题，需立即处理 |
+| Score | Level | Meaning |
+|-------|-------|---------|
+| 75-100 | Good | Code quality is acceptable |
+| 50-74 | Needs Work | Issues should be fixed before merging |
+| 0-49 | Critical | Must fix before committing |
 
-### 评分算法
+### Algorithm
 
-1. 每个问题按类别和严重级别加权计分
-2. 按文件数量密度归一化，避免大型项目评分过低
-3. 使用对数衰减 `math.Log1p(penalty) * 13` 平滑惩罚
+1. Each issue is weighted by category and severity
+2. Penalty is normalized by file count (density normalization)
+3. Logarithmic decay `math.Log1p(penalty) * 13` smooths the score
 
-### 类别权重
+### Category Weights
 
-| 类别 | Error 惩罚 | Warning 惩罚 |
-|------|-----------|-------------|
+| Category | Error Penalty | Warning Penalty |
+|----------|-------------|----------------|
 | Security | 5 | 2 |
 | Error Handling | 5 | 2 |
 | Concurrency | 4 | 1.5 |
@@ -127,89 +129,89 @@ Options:
 | Code Style | 1 | 0.2 |
 | Dead Code | 1 | 0.1 |
 
-## 检测规则
+## Detection Rules
 
-### AI 质量评估（5 条）
+### AI Quality (5 rules)
 
-| 维度 | 规则 | 严重级别 | 检测内容 |
-|------|------|---------|---------|
-| Completeness | `completeness/placeholder-comment` | warning | TODO/FIXME/HACK 占位符 |
-| Idiomatic | `idiomatic/snake-case-naming` | warning | snake_case 非惯用命名 |
-| Cleanliness | `cleanliness/debug-print` | warning | fmt.Println 调试代码 |
-| Implementation | `implementation/empty-func-body` | warning | 空函数体/存根实现 |
-| Type Safety | `type-safety/overly-broad-interface` | warning | interface{}/any 过度泛化 |
+| Dimension | Rule | Severity | What It Checks |
+|-----------|------|----------|---------------|
+| Completeness | `completeness/placeholder-comment` | warning | TODO/FIXME/HACK placeholders |
+| Idiomatic | `idiomatic/snake-case-naming` | warning | Non-idiomatic snake_case naming |
+| Cleanliness | `cleanliness/debug-print` | warning | fmt.Println debug statements |
+| Implementation | `implementation/empty-func-body` | warning | Empty function bodies / stubs |
+| Type Safety | `type-safety/overly-broad-interface` | warning | Overly broad interface{}/any |
 
-### 错误处理（3 条）
+### Error Handling (3 rules)
 
-| 规则 | 严重级别 | 检测内容 |
-|------|---------|---------|
-| `error-handling/unchecked-error` | error | 函数返回 error 但未检查 |
-| `error-handling/swallowed-error` | warning | error 被赋值但未处理 |
-| `error-handling/panic-in-library` | warning | 库代码中使用 panic |
+| Rule | Severity | What It Checks |
+|------|----------|---------------|
+| `error-handling/unchecked-error` | error | Function returns error but not checked |
+| `error-handling/swallowed-error` | warning | Error assigned but not handled |
+| `error-handling/panic-in-library` | warning | panic used in library code |
 
-### 安全（4 条）
+### Security (4 rules)
 
-| 规则 | 严重级别 | 检测内容 |
-|------|---------|---------|
-| `security/sql-injection` | error | SQL 拼接注入风险 |
-| `security/command-injection` | error | 命令注入风险 |
-| `security/weak-crypto` | warning | 弱加密算法（MD5/SHA1） |
-| `security/hardcoded-credentials` | error | 硬编码密码/密钥 |
+| Rule | Severity | What It Checks |
+|------|----------|---------------|
+| `security/sql-injection` | error | SQL concatenation injection risk |
+| `security/command-injection` | error | Command injection risk |
+| `security/weak-crypto` | warning | Weak crypto algorithms (MD5/SHA1) |
+| `security/hardcoded-credentials` | error | Hardcoded passwords/keys |
 
-### 并发（4 条）
+### Concurrency (4 rules)
 
-| 规则 | 严重级别 | 检测内容 |
-|------|---------|---------|
-| `concurrency/defer-in-loop` | warning | 循环中使用 defer |
-| `concurrency/range-var-capture` | warning | range 变量捕获问题 |
-| `concurrency/missing-mutex-unlock` | error | Mutex 未配对 Unlock |
-| `concurrency/goroutine-leak` | warning | Goroutine 泄漏风险 |
+| Rule | Severity | What It Checks |
+|------|----------|---------------|
+| `concurrency/defer-in-loop` | warning | defer used inside a loop |
+| `concurrency/range-var-capture` | warning | Range variable capture issue |
+| `concurrency/missing-mutex-unlock` | error | Mutex Unlock not paired |
+| `concurrency/goroutine-leak` | warning | Goroutine leak risk |
 
-### 性能（3 条）
+### Performance (3 rules)
 
-| 规则 | 严重级别 | 检测内容 |
-|------|---------|---------|
-| `performance/string-concat-in-loop` | warning | 循环中字符串拼接 |
-| `performance/unnecessary-conversion` | warning | 不必要的类型转换 |
-| `performance/large-struct-copy` | warning | 大结构体值拷贝 |
+| Rule | Severity | What It Checks |
+|------|----------|---------------|
+| `performance/string-concat-in-loop` | warning | String concatenation in loop |
+| `performance/unnecessary-conversion` | warning | Unnecessary type conversion |
+| `performance/large-struct-copy` | warning | Large struct passed by value |
 
-### 代码风格（3 条）
+### Code Style (3 rules)
 
-| 规则 | 严重级别 | 检测内容 |
-|------|---------|---------|
-| `style/exported-without-comment` | warning | 导出标识符缺少注释 |
-| `style/package-naming` | warning | 包名不符合规范 |
-| `style/function-complexity` | warning | 函数圈复杂度过高 |
+| Rule | Severity | What It Checks |
+|------|----------|---------------|
+| `style/exported-without-comment` | warning | Exported identifier missing doc comment |
+| `style/package-naming` | warning | Package name not following conventions |
+| `style/function-complexity` | warning | Function cyclomatic complexity too high |
 
-### 正确性（4 条）
+### Correctness (4 rules)
 
-| 规则 | 严重级别 | 检测内容 |
-|------|---------|---------|
-| `correctness/empty-interface` | warning | 空 interface{} 缺乏类型安全 |
-| `correctness/unused-label` | warning | 未使用的 label |
-| `correctness/redundant-return` | warning | 冗余的 return |
-| `correctness/error-check-without-handling` | warning | 检查了 error 但未处理 |
+| Rule | Severity | What It Checks |
+|------|----------|---------------|
+| `correctness/empty-interface` | warning | Empty interface{} lacks type safety |
+| `correctness/unused-label` | warning | Unused label |
+| `correctness/redundant-return` | warning | Redundant return statement |
+| `correctness/error-check-without-handling` | warning | Error checked but not handled |
 
-### 长度与复杂度（4 条）
+### Length & Complexity (4 rules)
 
-| 规则 | 严重级别 | 检测内容 |
-|------|---------|---------|
-| `complexity/function-depth` | warning | 函数嵌套深度过深 |
-| `length/function-length` | warning | 函数过长（>80 行） |
-| `length/file-length` | warning | 文件过长（>500 行） |
-| `length/line-length` | warning | 行过长（>120 字符） |
+| Rule | Severity | What It Checks |
+|------|----------|---------------|
+| `complexity/function-depth` | warning | Function nesting too deep |
+| `length/function-length` | warning | Function too long (>80 lines) |
+| `length/file-length` | warning | File too long (>500 lines) |
+| `length/line-length` | warning | Line too long (>120 chars) |
 
-### 变量与死代码（3 条）
+### Dead Code (3 rules)
 
-| 规则 | 严重级别 | 检测内容 |
-|------|---------|---------|
-| `shadow/variable-shadow` | warning | 变量遮蔽 |
-| `deadcode/unused-global-var` | warning | 未使用的全局变量 |
-| `deadcode/unused-struct-field` | warning | 未使用的结构体字段 |
+| Rule | Severity | What It Checks |
+|------|----------|---------------|
+| `shadow/variable-shadow` | warning | Variable shadowing |
+| `deadcode/unused-global-var` | warning | Unused global variable |
+| `deadcode/unused-struct-field` | warning | Unused struct field |
 
-## 配置文件
+## Configuration
 
-在项目根目录创建 `go-doctor.config.json`：
+Create `go-doctor.config.json` in the project root:
 
 ```json
 {
@@ -223,17 +225,17 @@ Options:
 }
 ```
 
-## AI 工具集成
+## AI Tool Integration
 
 ### Skill
 
-将 `.trae/skills/go-doctor/` 复制到项目根目录，AI 编码助手会自动识别并调用。
+Copy `.trae/skills/go-doctor/` to the project root. AI coding assistants will automatically detect and use it.
 
 ### .cursorrules / CLAUDE.md
 
-将项目自带的 `.cursorrules` 或 `CLAUDE.md` 复制到目标项目根目录，AI 编码工具会在生成代码后自动运行质量检查。
+Copy the included `.cursorrules` or `CLAUDE.md` to the target project root. AI coding tools will automatically run quality checks after generating code.
 
-## CI/CD 集成
+## CI/CD Integration
 
 ### GitHub Actions
 
@@ -262,7 +264,7 @@ cp hooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
-## 输出示例
+## Example Output
 
 ```
   ┌─────┐
@@ -275,58 +277,52 @@ chmod +x .git/hooks/pre-commit
   Framework: gin
   Source Files: 42
 
-  AI Quality 21 issues
-    ⚠ go-doctor/idiomatic/snake-case-naming ×6
+  AI Quality 15 issues
+    ⚠ idiomatic/snake-case-naming ×6
         Variable 'user_id' uses snake_case — not idiomatic Go
         → Use camelCase in Go: rename 'user_id' to 'userID'
-        main.go:10
-        main.go:22
+        main.go:10  main.go:22
 
-    ⚠ go-doctor/type-safety/overly-broad-interface ×6
+    ⚠ type-safety/overly-broad-interface ×4
         Function parameter uses overly broad type (interface{}/any) — lacks type safety
-        → Define a specific interface with required methods instead of accepting any type
-        handler.go:15
-        handler.go:23
+        → Define a specific interface with required methods
+        handler.go:15  handler.go:23
 
-    ⚠ go-doctor/completeness/placeholder-comment ×4
+    ⚠ completeness/placeholder-comment ×3
         Placeholder comment detected: // TODO: implement this
-        → Replace placeholder with actual implementation — incomplete code lowers quality
-        service.go:8
-        service.go:45
+        → Replace placeholder with actual implementation
+        service.go:8  service.go:45
 
-    ⚠ go-doctor/implementation/empty-func-body ×3
+    ⚠ implementation/empty-func-body ×1
         Function 'Validate' has a minimal body — likely a stub
-        → Implement the function with actual logic or add a doc comment explaining the placeholder
+        → Implement the function with actual logic
         validator.go:12
 
-    ⚠ go-doctor/cleanliness/debug-print ×2
+    ⚠ cleanliness/debug-print ×1
         Debug print statement: fmt.Println()
-        → Remove debug print or replace with proper logging: `log.Printf(...)` or `log.Println(...)`
+        → Remove or replace with proper logging: log.Printf(...)
         main.go:42
-        main.go:67
 
   Error Handling 3 issues
-    ✗ go-doctor/error-handling/unchecked-error ×3
+    ✗ error-handling/unchecked-error ×3
         Function call returns an error but the error is not checked
         → Assign the error return value and check it
-        main.go:42
-        main.go:67
-        handler.go:15
+        main.go:42  main.go:67  handler.go:15
 
-  Summary: 3 errors, 24 warnings across 8 files
+  Summary: 3 errors, 15 warnings across 8 files
 ```
 
-## 项目结构
+## Project Structure
 
 ```
 go-doctor/
 ├── cmd/
-│   └── go-doctor/          # CLI 入口
+│   └── go-doctor/          # CLI entry point
 ├── pkg/
 │   ├── analyzer/
-│   │   ├── analyzer.go     # AST 分析引擎
-│   │   └── rules/          # 检测规则
-│   │       ├── ai_code.go  # AI 质量评估（5 维度）
+│   │   ├── analyzer.go     # AST analysis engine
+│   │   └── rules/          # Detection rules
+│   │       ├── ai_code.go  # AI quality (5 dimensions)
 │   │       ├── complexity.go
 │   │       ├── concurrency.go
 │   │       ├── correctness.go
@@ -338,18 +334,18 @@ go-doctor/
 │   │       ├── security.go
 │   │       ├── shadow.go
 │   │       └── style.go
-│   ├── config/             # 配置加载
-│   ├── git/                # Git diff/commit 集成
-│   ├── project/            # 项目发现（框架/版本检测）
-│   ├── reporter/           # 报告输出（终端 + JSON）
-│   ├── scanner/            # 扫描编排器
-│   ├── scorer/             # 加权评分算法
-│   └── types/              # 核心类型定义
+│   ├── config/             # Configuration loading
+│   ├── git/                # Git diff/commit integration
+│   ├── project/            # Project discovery (framework/version)
+│   ├── reporter/           # Report output (terminal + JSON)
+│   ├── scanner/            # Scan orchestrator
+│   ├── scorer/             # Weighted scoring algorithm
+│   └── types/              # Core type definitions
 ├── .trae/skills/           # Trae Skill
-├── .github/workflows/      # CI/CD 模板
-├── hooks/                  # Pre-commit Hook
-├── .cursorrules            # Cursor 规则
-└── CLAUDE.md               # Claude Code 规则
+├── .github/workflows/      # CI/CD template
+├── hooks/                  # Pre-commit hook
+├── .cursorrules            # Cursor rules
+└── CLAUDE.md               # Claude Code rules
 ```
 
 ## License
