@@ -1,6 +1,6 @@
 /go-doctor
-/go-doctor-mcp
 *.exe
 *.test
 *.out
 vendor/
+.DS_Store
